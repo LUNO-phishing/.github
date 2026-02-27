@@ -1,94 +1,70 @@
 # LUNO
 
-> 통화 음성·문자 URL·신고 이력을 결합해 보이스피싱 위험을 빠르게 판단하는 모바일 보안 서비스
+> 통화 음성, 문자 URL, 신고 이력을 결합해 보이스피싱 위험을 빠르게 판단하는 모바일 보안 서비스
 
-## 한 줄 요약
-LUNO는 STT, AI 추론, URL 검증, 이력 관리를 통합해 통화 중 보이스피싱 위험을 빠르게 경고합니다.
+## Overview
+LUNO는 통화 중 녹음 음성을 분석해 보이스피싱 위험도를 점수와 등급으로 제공하고,
+문자에 포함된 URL 위험 여부를 함께 확인할 수 있는 Android 기반 서비스입니다.
 
-## 문제 정의
-보이스피싱은 통화 중 즉시 판단이 어렵고, 사후 대응만으로 피해를 줄이기 어렵습니다.  
-번호·키워드·URL 단일 신호 기반 탐지는 오탐/미탐이 잦습니다.  
-LUNO는 다중 신호를 하나의 파이프라인으로 묶어 즉시 대응 가능한 경고를 제공합니다.
+핵심은 모바일 앱, 백엔드 API, AI 추론 서버를 분리해
+분석 파이프라인을 안정적으로 운영할 수 있도록 구성한 점입니다.
 
-## 시스템 아키텍처 핵심 구조
-- **Mobile App**: 로그인, 권한, 분석 요청/조회
-- **Backend API**: 인증, 도메인 로직, 외부 연동 오케스트레이션
-- **AI Inference API**: 위험도 추론 독립 운영
-- **Data Layer**: MySQL(영속), Redis(캐시), Firebase Storage(오디오)
+## Problem & Solution
+- Problem: 통화 중에는 사기 여부를 즉시 판단하기 어렵고, 단일 신호만으로는 오탐/미탐 가능성이 큽니다.
+- Solution: 음성 STT 결과, AI 추론 결과, URL 검증, 과거 이력을 결합해 위험도를 종합 판단합니다.
 
-설계 철학: 모델 실험 주기와 서비스 운영 주기를 분리해 안정성과 확장성을 확보합니다.
+## Key Features
+- 통화 음성 업로드 후 STT + AI 위험도 분석
+- 위험 점수/등급/유형/요약 결과 제공
+- 문자 URL 위험 여부 즉시 조회
+- 개인 통화 이력 조회
+- 스캠 보드(사기 사례/이력) 조회
 
-## 시스템 다이어그램
+## Tech Stack
+| Layer | Stack |
+|---|---|
+| Mobile | Kotlin, Jetpack Compose, Retrofit2, OkHttp |
+| Backend | Java 17, Spring Boot, Spring Security(JWT), Spring Data JPA |
+| AI | Python, FastAPI |
+| Data/External | MySQL, Redis, Firebase Storage, Clova STT, Google OAuth |
+| Infra/Deploy | AWS, Nginx |
+
+## Architecture
 ```mermaid
 flowchart LR
-    U["User"] --> M["Mobile App"]
-    M --> B["Backend API"]
-    B --> A["AI Inference API"]
-    B --> S["Clova STT"]
+    U["User"] --> M["Android App"]
+    M --> N["Nginx"]
+    N --> B["Spring Boot API"]
+    B --> A["FastAPI AI Server"]
+    B --> C["Clova STT"]
     B --> D["MySQL"]
     B --> R["Redis"]
     B --> F["Firebase Storage"]
-
-    M -->|Audio| B
-    B -->|STT + Risk| M
-    M -->|SMS URL Check| B
-    B -->|History / Board| M
 ```
 
-## 핵심 기능
-1. 통화 분석 파이프라인(업로드 -> STT -> AI 추론 -> 저장)
-2. 위험 점수·등급·유형·요약 제공
-3. 문자 URL 즉시 검증
-4. 개인 이력 조회와 스캠 보드 제공
+## Deployment
+LUNO는 Docker 없이 AWS + Nginx 기반으로 배포했습니다.
 
-## 기술 스택
-- **Mobile**: Kotlin, Jetpack Compose, Retrofit2, OkHttp
-- **Backend**: Java 17, Spring Boot, Spring Security(JWT), Spring Data JPA
-- **AI**: Python, FastAPI, PyTorch, Transformers
-- **Infra/Data**: MySQL, Redis, Firebase Storage, Clova STT, Google OAuth
+### 1) 트래픽 진입점
+- 클라이언트는 `https://soowan.cloud` 도메인으로 요청합니다.
+- Nginx가 퍼블릭 엔드포인트를 담당하고, 외부 요청을 내부 애플리케이션으로 전달합니다.
 
-## Quick Start
-### 필수 요구사항
-Git 2.40+, Java 17, Python 3.10+, Android Studio, MySQL 8+, Redis 7+
+### 2) Nginx 리버스 프록시 구성
+- Nginx는 리버스 프록시로 동작하며 애플리케이션 서버를 직접 외부에 노출하지 않도록 구성했습니다.
+- 백엔드(Spring Boot)는 내부 포트(`8080`)에서 실행되고, Nginx를 통해서만 접근됩니다.
+- AI 서버는 백엔드에서 `AI_SERVER_BASE_URL`로 호출하는 내부 서비스로 분리했습니다.
 
-### 프로젝트 클론
-```bash
-git clone <YOUR_GITHUB_REPO_URL>
-cd <YOUR_REPO_DIR>
-```
+### 3) 애플리케이션 분리 운영
+- Spring Boot API와 FastAPI AI 서버를 역할별로 분리해 배포했습니다.
+- 분석 요청은 백엔드가 오케스트레이션하며, AI 서버는 추론 처리에 집중합니다.
+- 이 구조로 API 안정성과 모델/추론 로직의 독립적인 변경이 가능하도록 했습니다.
 
-### 환경 변수
-- Backend: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `GOOGLE_CLIENT_ID`, `jwt.secret`, `CLOVA_*`, `AI_SERVER_BASE_URL`
-- AI: `HOST=0.0.0.0`, `PORT=8000`, `MODEL_DEVICE=cpu`
-- 추가 파일: `backend-deploy/firebase-key.json`
+### 4) 데이터 및 외부 연동
+- MySQL: 사용자/분석/이력 데이터 영속 저장
+- Redis: 캐시 및 조회 성능 보조
+- Firebase Storage: 업로드 오디오 파일 저장
+- Clova STT: 음성 텍스트 변환
 
-### 외부 의존성 실행
-```bash
-docker run -d --name luno-mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=luno -p 3306:3306 mysql:8.0
-docker run -d --name luno-redis -p 6379:6379 redis:7
-```
-
-### 실행
-```bash
-# AI
-cd AI-main
-python3 -m venv .venv && source .venv/bin/activate
-pip install -U pip -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-
-# Backend
-cd ../backend-deploy
-cp .env.template .env
-./gradlew bootRun
-
-# Frontend
-cd ../frontend-develop
-./gradlew assembleDebug
-```
-
-실행 순서: MySQL/Redis -> DB 스키마 -> AI -> Backend -> Frontend
-
-## 향후 개선
-- 스트리밍 STT/추론으로 경고 시점 단축
-- 한국어 도메인 데이터 확장으로 정확도 개선
-- 로그·메트릭·트레이싱 기반 운영 관측성 강화
+### 5) 운영 포인트
+- Android 앱의 API Base URL을 도메인 기준으로 고정해 배포 환경 전환 시 클라이언트 변경 범위를 줄였습니다.
+- 인증(JWT), 캐시(Redis), 영속화(MySQL), 파일 저장(Firebase)을 분리해 운영 안정성을 확보했습니다.
