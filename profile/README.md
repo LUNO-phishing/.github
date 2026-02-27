@@ -2,6 +2,10 @@
 
 > 통화 음성, 문자 URL, 신고 이력을 결합해 보이스피싱 위험을 빠르게 판단하는 모바일 보안 서비스
 
+## 🎬 Demo
+![LUNO Demo](https://github.com/user-attachments/assets/e1b59e61-6409-45e1-a8b2-bf8f37651d49)
+
+
 ## Overview
 LUNO는 통화 중 녹음 음성을 분석해 보이스피싱 위험도를 점수와 등급으로 제공하고,
 문자에 포함된 URL 위험 여부를 함께 확인할 수 있는 Android 기반 서비스입니다.
