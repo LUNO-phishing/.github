@@ -2,6 +2,8 @@
 
 > 통화 음성, 문자 URL, 신고 이력을 결합해 보이스피싱 위험을 빠르게 판단하는 모바일 보안 서비스
 
+[Google Paly 바로가기](https://play.google.com/store/apps/details?id=com.luno.lunofrontend)
+
 ## 🎬 Demo
 <img src="https://github.com/user-attachments/assets/2a436798-f077-43c3-b73a-dab603880d54" width="1500" />
 
@@ -11,6 +13,33 @@ LUNO는 통화 중 녹음 음성을 분석해 보이스피싱 위험도를 점�
 
 핵심은 모바일 앱, 백엔드 API, AI 추론 서버를 분리해
 분석 파이프라인을 안정적으로 운영할 수 있도록 구성한 점입니다.
+
+## ScreenShots
+<table>
+  <tr align="center">
+    <td><b>메인 화면</b></td>
+    <td><b>문자 분석</b></td>
+    <td><b>분석 결과</b></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/8c3e970c-6bd2-408f-9197-3fce36b2c24f" width="100%"></td>
+    <td><img src="https://github.com/user-attachments/assets/00b52f9d-1245-4c2a-a44e-bf9c398ab1e8" width="100%"></td>
+    <td><img src="https://github.com/user-attachments/assets/fd3d783b-9f3a-4be0-bef2-7ab236d19501" width="100%"></td>
+  </tr>
+
+  <tr align="center">
+    <td><b>번호 입력</b></td>
+    <td><b>분석 중</b></td>
+    <td><b>위험도 결과</b></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/57f4fc23-3f95-4d14-849b-c4617b029596" width="100%"></td>
+    <td><img src="https://github.com/user-attachments/assets/7e61d4f9-aa36-42d8-80d9-90216d4599f9" width="100%"></td>
+    <td><img src="https://github.com/user-attachments/assets/edc224a3-63b3-46fd-aabc-f898bf3ddb44" width="100%"></td>
+    <td></td>
+  </tr>
+</table>
 
 ## Key Features
 - 통화 음성 업로드 후 STT + AI 위험도 분석
@@ -28,7 +57,11 @@ LUNO는 통화 중 녹음 음성을 분석해 보이스피싱 위험도를 점�
 | Data/External | MySQL, Redis, Firebase Storage, Clova STT, Google OAuth |
 | Infra/Deploy | AWS, Nginx |
 
-## Architecture
+## System Architecture
+<img src="https://github.com/user-attachments/assets/85d0d338-3217-49f7-b3ed-3c4b849fe8e2" alt="System Architecture" width="100%" />
+
+
+## System Diagram
 ```mermaid
 flowchart LR
     U["User"] --> M["Android App"]
